@@ -53,6 +53,14 @@ class Settings(BaseSettings):
     frontend_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
 
     @model_validator(mode="after")
+    def production_cookie_defaults(self):
+        """For cross-origin (e.g. Vercel → Render), cookies need Secure and SameSite=None."""
+        if self.app_env.strip().lower() == "production":
+            self.cookie_secure = True
+            self.cookie_samesite = "none"
+        return self
+
+    @model_validator(mode="after")
     def normalize_cookie_name(self):
         # Cookie names must not contain spaces (RFC 6265)
         self.cookie_name = self.cookie_name.replace(" ", "_").strip() or "jack_ka_bank_token"

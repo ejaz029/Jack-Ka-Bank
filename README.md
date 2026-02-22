@@ -66,6 +66,58 @@ npm run dev
   ```
   Restart `npm run dev` after adding the key. Optional: `VITE_CHATBOT_ENDPOINT` to use a different API (e.g. OpenAI).  
 
+## Deploy (Vercel + Render)
+
+**Live URLs**  
+- **Frontend (Vercel):** https://jack-ka-bank-git-main-ejazs-projects-407c6b14.vercel.app/  
+- **Backend (Render):** https://jack-ka-bank.onrender.com  
+
+Use this checklist so the **deployed link works** (login, cookies, balance).
+
+**Backend (Render)**  
+1. Deploy the `backend` folder as a Web Service.  
+   - Build: `pip install -r requirements.txt`  
+   - Start: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+2. **Required env vars:**
+   - `DATABASE_URL` — e.g. Render PostgreSQL or leave default for SQLite.
+   - `JWT_SECRET` — long random string.
+   - **`APP_ENV`** = **`production`** — so cookies work from the Vercel frontend (Secure + SameSite=None).
+3. **Optional:** `FRONTEND_ORIGINS` = your Vercel URL (e.g. `https://your-app.vercel.app`) if you use a custom domain; `*.vercel.app` is already allowed.
+4. **Cold start:** Free tier sleeps after ~15 min. First request can take 30–60 s; frontend timeout is 65 s. If you see "Cannot reach backend", open `https://jack-ka-bank.onrender.com/api/health` in a tab, wait for `{"status":"ok"}`, then try again.
+
+**Frontend (Vercel)**  
+1. Deploy the `frontend` folder.
+2. **Required env var:** **`VITE_API_URL`** = **`https://jack-ka-bank.onrender.com`** (no trailing slash).
+3. Redeploy after adding the variable so the build picks it up.
+
+**Troubleshooting**  
+- **"Not Found" on login:** Set `VITE_API_URL` = `https://jack-ka-bank.onrender.com` on Vercel and redeploy.  
+- **"Cannot reach backend":** Backend may be sleeping; wake it via `/api/health` (see above). Ensure Render has `APP_ENV=production`.  
+- **Login succeeds but dashboard/balance fails:** Cookies are not set cross-origin. On Render set **`APP_ENV=production`** (and redeploy) so the backend uses Secure + SameSite=None cookies.
+
+---
+
+## Simple debugging (deployed app)
+
+**Step 1 – Is the backend up?**  
+Open this in your browser:  
+**https://jack-ka-bank.onrender.com/api/health**
+
+- If you see `{"status":"ok"}` → backend is running. Go to Step 2.  
+- If it never loads or errors → backend is down or sleeping. Wait 1–2 minutes and try the link again. On Render, check the service is deployed and not crashed.
+
+**Step 2 – Try login on the app**  
+Open your **Vercel** app (e.g. `https://jack-ka-bank-git-main-ejazs-projects-407c6b14.vercel.app`), go to Login, enter username/password, click Sign in.
+
+- If you see "Cannot reach backend" → do Step 1 first (open the health link, wait for `{"status":"ok"}`, then try Sign in again).  
+- If login works but dashboard says "Unauthorized" or balance fails → on Render set `APP_ENV=production` and redeploy the backend.
+
+**Step 3 – Check env vars (only if still broken)**  
+- **Vercel:** Project → Settings → Environment Variables. You must have **`VITE_API_URL`** = **`https://jack-ka-bank.onrender.com`** (no `https://` at the end, no `/api`). Save and redeploy.  
+- **Render:** Environment tab. You must have **`APP_ENV`** = **`production`**. Save and redeploy.
+
+**Summary:** Fix one thing at a time: first backend (health link), then login, then env vars if needed.
+
 ## API
 - `POST /api/auth/register`
 - `POST /api/auth/login`

@@ -1,7 +1,7 @@
 import { FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-import api, { getApiErrorMessage } from "../api/client";
+import api, { getApiErrorMessage, PRODUCTION_BACKEND } from "../api/client";
 import BankFooter from "../components/BankFooter";
 import BankHeader from "../components/BankHeader";
 
@@ -52,7 +52,19 @@ export default function LoginPage() {
               </label>
               <a href="#forgot">Forgot password?</a>
             </div>
-            {error && <p className="error">{error}</p>}
+            {error && (
+              <>
+                <p className="error">{error}</p>
+                {error.includes("Cannot reach backend") && (
+                  <p className="hint" style={{ marginTop: "0.5rem" }}>
+                    <a href={`${PRODUCTION_BACKEND}/api/health`} target="_blank" rel="noopener noreferrer">
+                      Wake server (open in new tab)
+                    </a>
+                    {" — wait until you see {\"status\":\"ok\"}, then try Sign in again."}
+                  </p>
+                )}
+              </>
+            )}
             <button type="submit">Sign in</button>
           </form>
           <p className="secure-line">

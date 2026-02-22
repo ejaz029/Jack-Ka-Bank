@@ -11,6 +11,11 @@ class RegisterRequest(BaseModel):
     phone: str
     role: str
 
+    @field_validator("uname", "password", "email", "phone")
+    @classmethod
+    def strip_whitespace(cls, v: str) -> str:
+        return (v or "").strip()
+
     @field_validator("role")
     @classmethod
     def validate_role(cls, value: str) -> str:
@@ -30,6 +35,11 @@ class RegisterRequest(BaseModel):
 class LoginRequest(BaseModel):
     uname: str = Field(min_length=1, max_length=64)
     password: str = Field(min_length=8, max_length=128)
+
+    @field_validator("uname", "password")
+    @classmethod
+    def strip_whitespace(cls, v: str) -> str:
+        return (v or "").strip()
 
 
 class MessageResponse(BaseModel):

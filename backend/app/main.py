@@ -63,15 +63,23 @@ def health() -> dict:
 
 @app.post("/api/auth/register", response_model=MessageResponse, status_code=status.HTTP_201_CREATED)
 def register_user(payload: RegisterRequest, db: Session = Depends(get_db)) -> MessageResponse:
-    duplicate = db.query(KodUser).filter(
+    existing = db.query(KodUser).filter(
         or_(
             KodUser.uname == payload.uname,
             KodUser.email == payload.email,
             KodUser.phone == payload.phone,
         )
     ).first()
-    if duplicate:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="username/email/phone already exists")
+    if existing:
+        conflicts = []
+        if existing.uname == payload.uname:
+            conflicts.append("Username")
+        if existing.email == payload.email:
+            conflicts.append("Email")
+        if existing.phone == payload.phone:
+            conflicts.append("Phone number")
+        detail = " and ".join(conflicts) + " already taken. Use different value(s)."
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=detail)
 
     user = KodUser(
         uname=payload.uname,

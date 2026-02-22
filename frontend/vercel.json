@@ -1,0 +1,8 @@
+{
+    "rewrites": [
+      {
+        "source": "/api/(.*)",
+        "destination": "https://jack-ka-bank.onrender.com/api/$1"
+      }
+    ]
+  }
